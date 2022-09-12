@@ -24,12 +24,17 @@ namespace Rebus.Redis
         private const int WaitTimeout = 2000;
         private readonly BlockingCollection<(string topic, RedisValue value)> _messagesToProcess = new BlockingCollection<(string, RedisValue v)>();
 
-        public RedisTransport(string connectionString, string sectionKey, 
+        public RedisTransport(string connectionString,  
             string inputQueueAddress,
             IRebusLoggerFactory rebusLoggerFactory) : base(inputQueueAddress)
         {
-            _sectionKey = sectionKey??"";
             _connectionMultiplexer = ConnectionMultiplexer.Connect(connectionString);
+            _log = rebusLoggerFactory.GetLogger<RedisTransport>();
+        }
+
+        public RedisTransport(ConfigurationOptions connectionOptions, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory) : base(inputQueueAddress)
+        {
+            _connectionMultiplexer = ConnectionMultiplexer.Connect(connectionOptions);
             _log = rebusLoggerFactory.GetLogger<RedisTransport>();
         }
 
@@ -95,7 +100,7 @@ namespace Rebus.Redis
         private string EnsureFullyQualifiedName(string topic)
         {
             if (!topic.Contains("@"))
-                topic = topic + "@" + _sectionKey + "_" + TopicExchangeName;
+                topic = topic + "@" + TopicExchangeName;
             return topic;
         }
 
